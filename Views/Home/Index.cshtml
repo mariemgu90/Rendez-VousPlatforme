@@ -1,8 +1,65 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    var userRole = User.FindFirstValue(ClaimTypes.Role);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h2>Mes rendez-vous</h2>
+
+@if (userRole == "Client")
+{
+    <a asp-controller="Appointment" asp-action="Create" class="btn btn-primary">Créer un rendez-vous</a>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Statut</th>
+            @if (userRole == "Admin" || userRole == "Client")
+            {
+                <th>Professionnel</th>
+            }
+            @if (userRole == "Admin" || userRole == "Professional")
+            {
+                <th>Client</th>
+            }
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var appointment in ViewBag.Appointments)
+        {
+            <tr>
+                <td>@appointment.Date.ToString("g")</td>
+                <td>@appointment.Description</td>
+                <td>@appointment.Status</td>
+
+                @if (userRole == "Admin" || userRole == "Client")
+                {
+                    <td>@appointment.Professional.FirstName @appointment.Professional.LastName</td>
+                }
+
+                @if (userRole == "Admin" || userRole == "Professional")
+                {
+                    <td>@appointment.Client.FirstName @appointment.Client.LastName</td>
+                }
+
+                <td>
+                    @if (userRole == "Professional" && appointment.Status == "En cours")
+                    {
+                        <form asp-controller="Appointment" asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@appointment.Id" />
+                            <button type="submit" name="status" value="Accepté" class="btn btn-success">Accepter</button>
+                            <button type="submit" name="status" value="Refusé" class="btn btn-danger">Refuser</button>
+                        </form>
+                    }
+
+                    @if (userRole == "Client" && appointment.Status == "En cours")
+                    {
+                        <a asp-controller="Appointment" asp-action="Delete" asp-route-id="@appointment.Id" class="btn btn-danger">Supprimer</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

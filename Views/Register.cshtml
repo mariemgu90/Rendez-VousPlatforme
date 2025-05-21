@@ -1,0 +1,68 @@
+﻿@model User
+
+<h2>Inscription</h2>
+
+<form asp-action="Register" method="post">
+    <div>
+        <label asp-for="FirstName">Prénom</label>
+        <input asp-for="FirstName" />
+        <span asp-validation-for="FirstName"></span>
+    </div>
+
+    <div>
+        <label asp-for="LastName">Nom</label>
+        <input asp-for="LastName" />
+        <span asp-validation-for="LastName"></span>
+    </div>
+
+    <div>
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" />
+        <span asp-validation-for="Email"></span>
+    </div>
+
+    <div>
+        <label asp-for="Password">Mot de passe</label>
+        <input asp-for="Password" type="password" />
+        <span asp-validation-for="Password"></span>
+    </div>
+
+    <div>
+        <label>Confirmer le mot de passe</label>
+        <input name="confirmPassword" type="password" />
+    </div>
+
+    <div>
+        <label>Rôle</label>
+        <select asp-for="Role">
+            <option value="Client">Client</option>
+            <option value="Professional">Professionnel</option>
+        </select>
+        <span asp-validation-for="Role"></span>
+    </div>
+
+    <div id="specialityField" style="display:none;">
+        <label>Spécialité</label>
+        <select asp-for="Speciality">
+            @foreach (var speciality in ViewBag.Specialities)
+            {
+                <option value="@speciality">@speciality</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit">S'inscrire</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.getElementById('Role').addEventListener('change', function() {
+            var specialityField = document.getElementById('specialityField');
+            if (this.value === 'Professional') {
+                specialityField.style.display = 'block';
+            } else {
+                specialityField.style.display = 'none';
+            }
+        });
+    </script>
+}
