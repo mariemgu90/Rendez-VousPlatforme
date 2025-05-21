@@ -1,0 +1,31 @@
+# Ignorer les fichiers/dossiers temporaires de Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.cache
+
+# Ignorer les fichiers binaires générés
+bin/
+obj/
+
+# Fichiers de build
+*.dll
+*.exe
+*.pdb
+*.mdb
+
+# Fichiers de log
+*.log
+
+# Fichiers de base de données temporaires
+*.db
+*.mdf
+*.ldf
+*.sqlite
+
+# Autres fichiers temporaires
+*.tmp
+*.bak
+*.swp
+*.~*
