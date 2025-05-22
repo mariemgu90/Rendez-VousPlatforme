@@ -1,0 +1,76 @@
+﻿@model Rendez_Vousdotnet.Models.Appointment
+
+@{
+    ViewData["Title"] = "Créer un rendez-vous";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Create" method="post" class="mt-4">
+    <div class="form-group">
+        <label>Spécialité</label>
+        <select id="specialitySelect" class="form-control">
+            <option value="Avocat">Avocat</option>
+            <option value="Médecin">Médecin</option>
+        </select>
+    </div>
+
+    <div class="form-group" id="professionalsContainer">
+        <!-- Les professionnels seront chargés ici via AJAX -->
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Date">Date et heure</label>
+        <input asp-for="Date" type="datetime-local" class="form-control" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description">Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Créer</button>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        document.getElementById('specialitySelect').addEventListener('change', function () {
+            const speciality = this.value;
+
+            fetch(`/Appointment/GetProfessionals?speciality=${speciality}`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('professionalsContainer');
+                    container.innerHTML = '';
+
+                    if (data.length > 0) {
+                        const label = document.createElement('label');
+                        label.textContent = 'Choisir un professionnel';
+                        container.appendChild(label);
+
+                        const select = document.createElement('select');
+                        select.name = 'ProfessionalId';
+                        select.className = 'form-control';
+
+                        data.forEach(professional => {
+                            const option = document.createElement('option');
+                            option.value = professional.id;
+                            option.textContent = `${professional.firstName} ${professional.lastName}`;
+                            select.appendChild(option);
+                        });
+
+                        container.appendChild(select);
+                    } else {
+                        container.innerHTML = '<p class="text-warning">Aucun professionnel disponible pour cette spécialité.</p>';
+                    }
+                });
+        });
+
+        // Déclencher le chargement initial
+        document.getElementById('specialitySelect').dispatchEvent(new Event('change'));
+    </script>
+}

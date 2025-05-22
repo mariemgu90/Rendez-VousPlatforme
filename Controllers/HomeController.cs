@@ -1,25 +1,23 @@
 using System.Diagnostics;
-using System.Security.Claims; 
-using Microsoft.AspNetCore.Authorization; 
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; 
-using Rendez_Vousdotnet.Models; 
-using Rendez_Vousdotnet.Data; 
+using Microsoft.EntityFrameworkCore;
+using Rendez_Vousdotnet.Models;
+using Rendez_Vousdotnet.Data;
 
 namespace Rendez_Vousdotnet.Controllers
 {
-    [Authorize] 
+    [Authorize]
     public class HomeController : Controller
     {
-       
-        private readonly AppDbContext _context; 
+        private readonly AppDbContext _context;
 
-        public HomeController(AppDbContext context) 
+        public HomeController(AppDbContext context)
         {
             _context = context;
         }
 
-       
         public async Task<IActionResult> Index()
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));

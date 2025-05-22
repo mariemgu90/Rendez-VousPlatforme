@@ -17,6 +17,7 @@ namespace Rendez_Vousdotnet.Controllers
             _context = context;
         }
 
+        // GET: Formulaire de création de rendez-vous (Client uniquement)
         [Authorize(Roles = "Client")]
         [HttpGet]
         public IActionResult Create()
@@ -25,37 +26,27 @@ namespace Rendez_Vousdotnet.Controllers
             return View();
         }
 
+        // POST: Création du rendez-vous (Client uniquement)
         [Authorize(Roles = "Client")]
         [HttpPost]
-        public async Task<IActionResult> Create(Appointment appointment, string speciality)
+        public async Task<IActionResult> Create(Appointment appointment, int professionalId)
         {
             if (ModelState.IsValid)
             {
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!int.TryParse(userIdClaim, out var userId))
+                if (!int.TryParse(userIdClaim, out var clientId))
                 {
                     return Forbid();
                 }
 
-                appointment.ClientId = userId;
+                appointment.ClientId = clientId;
+                appointment.ProfessionalId = professionalId;
                 appointment.Status = "En cours";
-
-                // Déclare le professionnel ici
-                var professional = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Role == "Professional" && u.Speciality == speciality);
-
-                if (professional == null)
-                {
-                    ModelState.AddModelError("", "Aucun professionnel disponible pour cette spécialité");
-                    ViewBag.Specialities = new List<string> { "Avocat", "Médecin" };
-                    return View(appointment);
-                }
-
-                appointment.ProfessionalId = professional.Id;
 
                 _context.Appointments.Add(appointment);
                 await _context.SaveChangesAsync();
 
+                TempData["Message"] = "Rendez-vous créé avec succès";
                 return RedirectToAction("Index", "Home");
             }
 
@@ -63,26 +54,39 @@ namespace Rendez_Vousdotnet.Controllers
             return View(appointment);
         }
 
+        // GET: Récupérer les professionnels d'une spécialité (utilisé avec AJAX)
+        [Authorize(Roles = "Client")]
+        [HttpGet]
+        public async Task<IActionResult> GetProfessionals(string speciality)
+        {
+            var professionals = await _context.Users
+                .Where(u => u.Role == "Professional" && u.Speciality == speciality)
+                .Select(u => new {
+                    id = u.Id,
+                    firstName = u.FirstName,
+                    lastName = u.LastName,
+                    speciality = u.Speciality
+                })
+                .ToListAsync();
+
+            return Json(professionals);
+        }
+
+        // POST: Mise à jour du statut du rendez-vous (Professional uniquement)
         [Authorize(Roles = "Professional")]
         [HttpPost]
         public async Task<IActionResult> UpdateStatus(int id, string status)
         {
             var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null)
-            {
                 return NotFound();
-            }
 
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out var userId))
-            {
+            if (!int.TryParse(userIdClaim, out var professionalId))
                 return Forbid();
-            }
 
-            if (appointment.ProfessionalId != userId)
-            {
+            if (appointment.ProfessionalId != professionalId)
                 return Forbid();
-            }
 
             appointment.Status = status;
             _context.Appointments.Update(appointment);
@@ -91,25 +95,20 @@ namespace Rendez_Vousdotnet.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // DELETE: Suppression du rendez-vous (Client uniquement)
         [Authorize(Roles = "Client")]
         public async Task<IActionResult> Delete(int id)
         {
             var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null)
-            {
                 return NotFound();
-            }
 
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out var userId))
-            {
+            if (!int.TryParse(userIdClaim, out var clientId))
                 return Forbid();
-            }
 
-            if (appointment.ClientId != userId)
-            {
+            if (appointment.ClientId != clientId)
                 return Forbid();
-            }
 
             _context.Appointments.Remove(appointment);
             await _context.SaveChangesAsync();
